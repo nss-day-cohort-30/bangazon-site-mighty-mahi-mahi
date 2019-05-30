@@ -61,6 +61,78 @@ namespace Bangazon.Data {
             user.PasswordHash = passwordHash.HashPassword (user, "Admin8*");
             modelBuilder.Entity<ApplicationUser> ().HasData (user);
 
+            ApplicationUser brian = new ApplicationUser
+            {
+                FirstName = "Brian",
+                LastName = "Neal",
+                StreetAddress = "1412 Phillips Street",
+                UserName = "brianbneal@gmail.com",
+                NormalizedUserName = "BRIANBNEAL@GMAIL.COM",
+                Email = "brianbneal@gmail.com",
+                NormalizedEmail = "BRIANBNEAL@GMAIL.COM",
+                EmailConfirmed = true,
+                LockoutEnabled = false,
+                SecurityStamp = Guid.NewGuid().ToString("D")
+            };
+            var passwordHash2 = new PasswordHasher<ApplicationUser>();
+            brian.PasswordHash = passwordHash2.HashPassword(brian, "Admin8*");
+            modelBuilder.Entity<ApplicationUser>().HasData(brian);
+
+            ApplicationUser connor = new ApplicationUser
+            {
+                FirstName = "Connor",
+                LastName = "Bailey",
+                StreetAddress = "1619 Marshall Hollow ",
+                UserName = "bailey.connor.p@gmail.com",
+                NormalizedUserName = "BAILEY.CONNOR.P@GMAIL.COM",
+                Email = "bailey.connor.p@gmail.com",
+                NormalizedEmail = "bailey.connor.p@gmail.com",
+                EmailConfirmed = true,
+                LockoutEnabled = false,
+                SecurityStamp = Guid.NewGuid().ToString("D")
+            };
+            var passwordHash3 = new PasswordHasher<ApplicationUser>();
+            connor.PasswordHash = passwordHash3.HashPassword(connor, "Admin8*");
+            modelBuilder.Entity<ApplicationUser>().HasData(connor);
+
+            ApplicationUser niall = new ApplicationUser
+            {
+                FirstName = "Niall",
+                LastName = "Fraser",
+                StreetAddress = "123 Infinity Way",
+                UserName = "niall@niall.com",
+                NormalizedUserName = "NIALL@NIALL.COM",
+                Email = "niall@niall.com",
+                NormalizedEmail = "NIALL@NIALL.COM",
+                EmailConfirmed = true,
+                LockoutEnabled = false,
+                SecurityStamp = Guid.NewGuid().ToString("D")
+            };
+            var passwordHash4 = new PasswordHasher<ApplicationUser>();
+            niall.PasswordHash = passwordHash4.HashPassword(niall, "Niall1*");
+            modelBuilder.Entity<ApplicationUser>().HasData(niall);
+
+            ApplicationUser jacob = new ApplicationUser
+            {
+                FirstName = "Jacob",
+                LastName = "Sanders",
+                StreetAddress = "89 Rainbow Road",
+                UserName = "Jacob.Sanders@gmail.com",
+                NormalizedUserName = "JACOB.SANDERS@GMAIL.COM",
+                Email = "Jacob.Sanders@gmail.com",
+                NormalizedEmail = "JACOB.SANDERS@GMAIL.COM",
+                EmailConfirmed = true,
+                LockoutEnabled = false,
+                SecurityStamp = Guid.NewGuid().ToString("D")
+            };
+            var passwordHash5 = new PasswordHasher<ApplicationUser>();
+            jacob.PasswordHash = passwordHash5.HashPassword(jacob, "Thebeesknees09*");
+            modelBuilder.Entity<ApplicationUser>().HasData(jacob);
+
+
+
+
+            ////////////////////////////////////////////
             modelBuilder.Entity<PaymentType> ().HasData (
                 new PaymentType () {
                     PaymentTypeId = 1,
@@ -73,6 +145,41 @@ namespace Bangazon.Data {
                         UserId = user.Id,
                         Description = "Discover",
                         AccountNumber = "4102948572991"
+                },
+                new PaymentType()
+                {
+                    PaymentTypeId = 3,
+                    UserId = jacob.Id,
+                    Description = "VISA",
+                    AccountNumber = "8374958468590"
+                },
+                new PaymentType()
+                {
+                    PaymentTypeId = 4,
+                    UserId = niall.Id,
+                    Description = "Visa",
+                    AccountNumber = "44445445433563"
+                },
+                new PaymentType()
+                {
+                    PaymentTypeId = 5,
+                    UserId = connor.Id,
+                    Description = "Diners Club Card",
+                    AccountNumber = "4982399357284112"
+                },
+                new PaymentType()
+                {
+                    PaymentTypeId = 6,
+                    UserId = connor.Id,
+                    Description = "MasterCharge",
+                    AccountNumber = "8394572390128745"
+                },
+                new PaymentType()
+                {
+                    PaymentTypeId = 7,
+                    UserId = brian.Id,
+                    Description = "Big Bucks Card",
+                    AccountNumber = "123456789101112"
                 }
             );
 
@@ -105,6 +212,46 @@ namespace Bangazon.Data {
                         Title = "Wheelbarrow",
                         Quantity = 5,
                         Price = 29.99
+                },
+                new Product()
+                {
+                    ProductId = 3,
+                    ProductTypeId = 1,
+                    UserId = niall.Id,
+                    Description = "round and bouncy",
+                    Title = "Ball",
+                    Quantity = 10,
+                    Price = 11.99
+                },
+                new Product()
+                {
+                    ProductId = 4,
+                    ProductTypeId = 1,
+                    UserId = jacob.Id,
+                    Description = "You will never see a price point like this again",
+                    Title = "Bugatti",
+                    Quantity = 6,
+                    Price = 5.00
+                },
+                new Product()
+                {
+                    ProductId = 5,
+                    ProductTypeId = 1,
+                    UserId = connor.Id,
+                    Description = "Can shoot t-shirts (or hot dogs) up to 600 meters when used at max air pressure",
+                    Title = "T-Shirt Cannon",
+                    Quantity = 8,
+                    Price = 99.99
+                },
+                new Product()
+                {
+                    ProductId = 6,
+                    ProductTypeId = 1,
+                    UserId = brian.Id,
+                    Description = "it's a stick",
+                    Title = "back scratcher",
+                    Quantity = 200,
+                    Price = 5.99
                 }
             );
 
