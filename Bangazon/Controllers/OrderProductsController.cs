@@ -55,33 +55,62 @@ namespace Bangazon.Controllers
 
         // GET: OrderProducts/Create
         [Authorize]
-        public async Task<IActionResult> Create([FromRoute] int prodId)
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([FromRoute]int? id)
         {
-            //ViewData["OrderId"] = new SelectList(_context.Order, "OrderId", "UserId");
-            //ViewData["ProductId"] = new SelectList(_context.Product, "ProductId", "Description");
-            //return View();
+            // Find the product requested
+            Product productToAdd = await _context.Product.SingleOrDefaultAsync(p => p.ProductId == id);
 
+            // Get the current user
+            var user = await GetCurrentUserAsync();
+
+            // See if the user has an open order
+            var openOrder = await _context.Order.SingleOrDefaultAsync(o => o.User == user && o.PaymentTypeId == null);
+
+            // If no order, create one, else add to existing order
+            if (openOrder == null)
+            {
+                Order newOrder = new Order
+                {
+                    DateCreated = DateTime.Now,
+                    DateCompleted = null,
+                    UserId = user.Id,
+                    PaymentTypeId = null
+                };
+                _context.Order.Add(newOrder);
+                await _context.SaveChangesAsync();
+                openOrder = newOrder;
+            }
+
+            OrderProduct newOrderProduct = new OrderProduct
+            {
+                OrderId = openOrder.OrderId,
+                ProductId = productToAdd.ProductId
+            };
+            _context.Add(newOrderProduct);
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("Index", "Products");
         }
 
-        // POST: OrderProducts/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("OrderProductId,OrderId,ProductId")] OrderProduct orderProduct)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(orderProduct);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["OrderId"] = new SelectList(_context.Order, "OrderId", "UserId", orderProduct.OrderId);
-            ViewData["ProductId"] = new SelectList(_context.Product, "ProductId", "Description", orderProduct.ProductId);
-            return View(orderProduct);
-        }
+        //// POST: OrderProducts/Create
+        //// To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+        //// more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> Create([Bind("OrderProductId,OrderId,ProductId")] OrderProduct orderProduct)
+        //{
+        //    if (ModelState.IsValid)
+        //    {
+        //        _context.Add(orderProduct);
+        //        await _context.SaveChangesAsync();
+        //        return RedirectToAction(nameof(Index));
+        //    }
+        //    ViewData["OrderId"] = new SelectList(_context.Order, "OrderId", "UserId", orderProduct.OrderId);
+        //    ViewData["ProductId"] = new SelectList(_context.Product, "ProductId", "Description", orderProduct.ProductId);
+        //    return View(orderProduct);
+        //}
 
         // GET: OrderProducts/Edit/5
         public async Task<IActionResult> Edit(int? id)
