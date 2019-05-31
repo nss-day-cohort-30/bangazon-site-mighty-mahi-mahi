@@ -7,17 +7,79 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Bangazon.Data;
 using Bangazon.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
+using Bangazon.Models.OrderViewModels;
 
 namespace Bangazon.Controllers
 {
     public class OrdersController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public OrdersController(ApplicationDbContext context)
+        public OrdersController(ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
+
+        private Task<ApplicationUser> GetCurrentUserAsync() => _userManager.GetUserAsync(HttpContext.User);
+
+        //GET: Orders/ShoppingCart
+        [Authorize]
+        public async Task<IActionResult> ShoppingCart()
+        {
+            // Get the current user
+            var user = await GetCurrentUserAsync();
+
+            // See if the user has an open order
+            var openOrder = await _context.Order.SingleOrDefaultAsync(o => o.User == user && o.PaymentTypeId == null);
+
+            // Get all products associated with users open order, group them in anonymous typed object with Key, Count, Title
+            var productsInCart = _context.OrderProduct
+                                          .Where(op => op.OrderId == openOrder.OrderId)
+                                          .Select(op => op.Product)
+                                          .GroupBy(p => p.ProductId,
+                                            p => p.Title,
+                                            (key, Title) => new
+                                            {
+                                                key = key,
+                                                count = Title.Count(),
+                                                title = Title
+                                            })
+                                          .ToList()
+                                          ;
+
+            // create empty array to use as OrderDetailViewModel LineItem property
+            List<OrderLineItem> shoppingCartLinteItems = new List<OrderLineItem>();
+
+            //Take each product, createa a new OrderLineItem object and place in placeholder array shoppingCartLineItems
+            productsInCart.ForEach(p =>
+            {
+                Product product =  _context.Product.SingleOrDefault(cp => cp.ProductId == p.key);
+
+                OrderLineItem newLineItem = new OrderLineItem
+                {
+                    Product = product,
+                    Units = p.count,
+                    Cost = (p.count * product.Price)
+                };
+
+                shoppingCartLinteItems.Add(newLineItem);
+            });
+
+            //Create OrderDetailViewModel using current users open order and shoppingCartLineItems
+            OrderDetailViewModel model = new OrderDetailViewModel
+            {
+                Order = openOrder,
+                LineItems = shoppingCartLinteItems
+            };
+
+            return View(model);
+        }
+
 
         // GET: Orders
         public async Task<IActionResult> Index()
@@ -31,7 +93,13 @@ namespace Bangazon.Controllers
         {
             if (id == null)
             {
-                return NotFound();
+                // Get the current user
+                var user = await GetCurrentUserAsync();
+
+                // See if the user has an open order
+                var openOrder = await _context.Order.SingleOrDefaultAsync(o => o.User == user && o.PaymentTypeId == null);
+
+                return View(openOrder);
             }
 
             var order = await _context.Order

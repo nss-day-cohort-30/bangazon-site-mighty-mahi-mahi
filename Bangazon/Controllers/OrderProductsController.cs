@@ -55,8 +55,6 @@ namespace Bangazon.Controllers
 
         // GET: OrderProducts/Create
         [Authorize]
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([FromRoute]int? id)
         {
             // Find the product requested
@@ -93,24 +91,6 @@ namespace Bangazon.Controllers
 
             return RedirectToAction("Index", "Products");
         }
-
-        //// POST: OrderProducts/Create
-        //// To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        //// more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Create([Bind("OrderProductId,OrderId,ProductId")] OrderProduct orderProduct)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        _context.Add(orderProduct);
-        //        await _context.SaveChangesAsync();
-        //        return RedirectToAction(nameof(Index));
-        //    }
-        //    ViewData["OrderId"] = new SelectList(_context.Order, "OrderId", "UserId", orderProduct.OrderId);
-        //    ViewData["ProductId"] = new SelectList(_context.Product, "ProductId", "Description", orderProduct.ProductId);
-        //    return View(orderProduct);
-        //}
 
         // GET: OrderProducts/Edit/5
         public async Task<IActionResult> Edit(int? id)
