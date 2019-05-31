@@ -37,6 +37,15 @@ namespace Bangazon.Controllers
             // See if the user has an open order
             var openOrder = await _context.Order.SingleOrDefaultAsync(o => o.User == user && o.PaymentTypeId == null);
 
+            //Get user's payment types
+            List<SelectListItem> paymentTypes = _context.PaymentType
+                               .Where(pt => pt.UserId == user.Id)
+                               .Select(li => new SelectListItem
+                               {
+                                    Text = li.Description,
+                                    Value = li.PaymentTypeId.ToString()
+                               }).ToList();
+
             // Get all products associated with users open order, group them in anonymous typed object with Key, Count, Title
             var productsInCart = _context.OrderProduct
                                           .Where(op => op.OrderId == openOrder.OrderId)
@@ -74,7 +83,8 @@ namespace Bangazon.Controllers
             OrderDetailViewModel model = new OrderDetailViewModel
             {
                 Order = openOrder,
-                LineItems = shoppingCartLinteItems
+                LineItems = shoppingCartLinteItems,
+                PaymentTypes = paymentTypes
             };
 
             return View(model);
@@ -140,35 +150,36 @@ namespace Bangazon.Controllers
             return View(order);
         }
 
-        // GET: Orders/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
+        //// GET: Orders/Edit/5
+        //public async Task<IActionResult> Edit(int? id)
+        //{
+        //    if (id == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            var order = await _context.Order.FindAsync(id);
-            if (order == null)
-            {
-                return NotFound();
-            }
-            ViewData["PaymentTypeId"] = new SelectList(_context.PaymentType, "PaymentTypeId", "AccountNumber", order.PaymentTypeId);
-            ViewData["UserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", order.UserId);
-            return View(order);
-        }
+        //    var order = await _context.Order.FindAsync(id);
+        //    if (order == null)
+        //    {
+        //        return NotFound();
+        //    }
+        //    ViewData["PaymentTypeId"] = new SelectList(_context.PaymentType, "PaymentTypeId", "AccountNumber", order.PaymentTypeId);
+        //    ViewData["UserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", order.UserId);
+        //    return View(order);
+        //}
 
         // POST: Orders/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("OrderId,DateCreated,DateCompleted,UserId,PaymentTypeId")] Order order)
+        public async Task<IActionResult> CompletePurchase([Bind("PaymentTypeId,OrderId,UserId," +
+            "DateCreated,PaymentType,OrderProducts")] Order order)
         {
-            if (id != order.OrderId)
-            {
-                return NotFound();
-            }
+            //If you want to check errors in model state use the code below:
+            //var errors = ModelState.Values.SelectMany(v => v.Errors);
+            order.DateCompleted = DateTime.Now;
+            ModelState.Remove("order.User");
 
             if (ModelState.IsValid)
             {
@@ -185,14 +196,21 @@ namespace Bangazon.Controllers
                     }
                     else
                     {
+                        order.PaymentTypeId = null;
+                        order.DateCompleted = null;
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Index", "Products");
             }
-            ViewData["PaymentTypeId"] = new SelectList(_context.PaymentType, "PaymentTypeId", "AccountNumber", order.PaymentTypeId);
-            ViewData["UserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", order.UserId);
-            return View(order);
+            else
+            {
+                order.PaymentTypeId = null;
+                order.DateCompleted = null;
+            }
+            //ViewData["PaymentTypeId"] = new SelectList(_context.PaymentType, "PaymentTypeId", "AccountNumber", order.PaymentTypeId);
+            //ViewData["UserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", order.UserId);
+            return  RedirectToAction(nameof(ShoppingCart));
         }
 
         // GET: Orders/Delete/5

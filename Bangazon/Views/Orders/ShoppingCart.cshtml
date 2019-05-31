@@ -23,23 +23,39 @@
     <tbody>
         @foreach (var item in Model.LineItems)
         {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Product.Title)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Units)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Cost)
-            </td>
-            <td>
-                @*<a asp-action="Details" asp-route-id="@item.ProductId">Details</a> |
-                <a asp-action="" asp-route-id="@item.ProductId">Delete</a>*@
-            </td>
-        </tr>
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Product.Title)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Units)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Cost)
+                </td>
+            </tr>
         }
     </tbody>
 </table>
+<form asp-action="CompletePurchase">
+    <div class="form-group">
+        <label asp-for="@Model.PaymentTypes" class="control-label">Choose a Payment Type</label>
+        <select asp-for="@Model.Order.PaymentTypeId" asp-items="@Model.PaymentTypes"></select>
+    </div>
+    @* CREATING HIDDEN INPUTS TO SEND IN FOR DB ORDER COLUMNS *@
+    <input type="hidden" asp-for="@Model.Order.OrderId" value="@Model.Order.OrderId" />
+    <input type="hidden" asp-for="@Model.Order.UserId" value="@Model.Order.UserId" />
+    <input type="hidden" asp-for="@Model.Order.DateCreated" value="@Model.Order.DateCreated" />
+    <input type="hidden" asp-for="@Model.Order.OrderProducts" value="@Model.Order.OrderProducts" />
+
+
+    <div class="form-group">
+        <input type="submit" value="Complete Purhcase" class="btn btn-primary" />
+    </div>
+</form>
+
+<td>
+    <a asp-controller="Products" asp-action="Index">Continue Shopping</a> 
+</td>
 
 
