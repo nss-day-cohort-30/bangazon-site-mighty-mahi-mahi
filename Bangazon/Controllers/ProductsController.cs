@@ -69,12 +69,12 @@ namespace Bangazon.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("DateCreated,Description,Title,Price,Quantity,City,ImagePath,ProductTypeId")] Product product)
+        public async Task<IActionResult> Create([Bind("ProductId,DateCreated,Description,UserId,Title,Price,Quantity,City,ImagePath,ProductTypeId")] Product product)
         {
             
             // Remove the user from the model validation because it is
             // not information posted in the form
-            ModelState.Remove("product.UserId");
+            ModelState.Remove("UserId");
             var user = await GetCurrentUserAsync();
             
             if (ModelState.IsValid)
