@@ -44,13 +44,16 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
-                        <li>
+                        <li class="nav-item">
                             <form asp-controller="Products" asp-action="SearchResults">
                                 <p>
                                     Search Products: <input type="text" name="SearchString">
                                     <input type="submit" value="Search" />
                                 </p>
                             </form>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Order" asp-action="Reports">Reports</a>
                         </li>
                     </ul>
 
