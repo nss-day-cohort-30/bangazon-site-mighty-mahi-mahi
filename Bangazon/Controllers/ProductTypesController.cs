@@ -19,6 +19,7 @@ namespace Bangazon.Controllers
             _context = context;
         }
 
+
         // GET: ProductTypes
         public async Task<IActionResult> Index()
         {
