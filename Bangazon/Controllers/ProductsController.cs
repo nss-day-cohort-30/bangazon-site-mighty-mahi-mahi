@@ -29,10 +29,21 @@ namespace Bangazon.Controllers
         // GET: Products
         public async Task<IActionResult> Index()
         {
-            var user = await GetCurrentUserAsync();
 
-            var applicationDbContext = _context.Product.Include(p => p.ProductType).Include(p => p.User);
+            var applicationDbContext = _context.Product
+                .Include(p => p.ProductType)
+                .Include(p => p.User)
+                .OrderByDescending(a => a.DateCreated).Take(20);
+
             return View(await applicationDbContext.ToListAsync());
+        }
+
+        //GET: Products/SearchResults
+        public async Task<IActionResult> SearchResults(string SearchString)
+        {
+            var searchTerms = SearchString.Split(" ").ToList();
+            var productsThatMatchSearch = _context.Product.Where(p => searchTerms.Any(t => p.Title.ToUpper().Contains(t.ToUpper())));
+            return View(await productsThatMatchSearch.ToListAsync());
         }
 
         // GET: Products/Details/5
@@ -43,6 +54,7 @@ namespace Bangazon.Controllers
                 return NotFound();
             }
 
+            // orders the products added by the user by date created and then only selects the 20 latest with the .Take() method
             var product = await _context.Product
                 .Include(p => p.ProductType)
                 .Include(p => p.User)
@@ -75,10 +87,13 @@ namespace Bangazon.Controllers
             // Remove the user from the model validation because it is
             // not information posted in the form
             ModelState.Remove("UserId");
+            ModelState.Remove("DateCreated");
+
             var user = await GetCurrentUserAsync();
             
             if (ModelState.IsValid)
             {
+                product.DateCreated = DateTime.Now;
                 product.User = user;
                 product.UserId = user.Id;
                 _context.Add(product);
