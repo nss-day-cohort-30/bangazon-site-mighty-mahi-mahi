@@ -29,7 +29,8 @@
             </dd>
         </dl>
         <div>
-            <a asp-controller="PaymentTypes" asp-action="Edit" asp-route-id="@type.PaymentTypeId">Edit</a>
+            <a asp-controller="PaymentTypes" asp-action="Edit" asp-route-id="@type.PaymentTypeId">Edit</a> | 
+            <a asp-controller="PaymentTypes" asp-action="Delete" asp-route-id="@type.PaymentTypeId">Delete</a>
         </div>
         <hr />
     }
