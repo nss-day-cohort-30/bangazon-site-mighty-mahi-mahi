@@ -41,7 +41,7 @@ namespace Bangazon.Controllers
 
             return View(productsByType);
         }
-
+        
         // GET: ProductTypes/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -51,6 +51,7 @@ namespace Bangazon.Controllers
             }
 
             var productType = await _context.ProductType
+                .Include(pt => pt.Products)
                 .FirstOrDefaultAsync(m => m.ProductTypeId == id);
             if (productType == null)
             {

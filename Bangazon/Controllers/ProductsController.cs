@@ -9,6 +9,7 @@ using Bangazon.Data;
 using Bangazon.Models;
 using Microsoft.AspNetCore.Identity;
 using Bangazon.Models.ProductViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Bangazon.Controllers
 {
@@ -196,6 +197,19 @@ namespace Bangazon.Controllers
         private bool ProductExists(int id)
         {
             return _context.Product.Any(e => e.ProductId == id);
+        }
+
+        // GET: Only User products
+        [Authorize]
+        public async Task<IActionResult> GetUserProducts()
+        {
+            var user = await GetCurrentUserAsync();
+
+            var applicationDbContext = _context.Product
+                .Include(p => p.ProductType)
+                .Where(p => p.User == user);
+
+            return View(await applicationDbContext.ToListAsync());
         }
     }
 }

@@ -45,7 +45,6 @@ namespace Bangazon.Controllers
             {
                 Order newOrder = new Order
                 {
-                    DateCreated = DateTime.Now,
                     DateCompleted = null,
                     UserId = user.Id,
                     PaymentTypeId = null
