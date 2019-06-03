@@ -53,7 +53,7 @@
                 @Html.DisplayFor(modelItem => item.Quantity)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.ProductType.Label)
+                <a asp-controller="ProductTypes" asp-action="AllProductsByType" asp-route-id="@item.ProductTypeId" >@Html.DisplayFor(modelItem => item.ProductType.Label)</a>
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.ProductId">Edit</a> |

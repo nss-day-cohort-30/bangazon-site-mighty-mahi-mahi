@@ -41,6 +41,23 @@ namespace Bangazon.Controllers
 
             return View(productsByType);
         }
+        // GET: AllProductsByType
+         public async Task<IActionResult> AllProductsByType(int? id)
+        {
+            var allProductsByType = await (
+                from t in _context.ProductType
+                join p in _context.Product
+                on t.ProductTypeId equals p.ProductTypeId
+                group new { t, p } by new { t.ProductTypeId, t.Label } into groupes
+                select new GroupedProducts
+                {
+                    TypeId = groupes.Key.ProductTypeId,
+                    TypeName = groupes.Key.Label,
+                    Products = groupes.Select(x => x.p)
+                }).ToListAsync();
+
+            return View(allProductsByType);
+        } 
 
         // GET: ProductTypes/Details/5
         public async Task<IActionResult> Details(int? id)
