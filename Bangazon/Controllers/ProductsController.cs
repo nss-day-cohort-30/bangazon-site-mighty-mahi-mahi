@@ -30,7 +30,7 @@ namespace Bangazon.Controllers
         public async Task<IActionResult> SearchResults(string SearchString)
         {
             var searchTerms = SearchString.Split(" ").ToList();
-            var productsThatMatchSearch = _context.Product.Where(p => searchTerms.Any(t => p.Title.Contains(t)));
+            var productsThatMatchSearch = _context.Product.Where(p => searchTerms.Any(t => p.Title.ToUpper().Contains(t.ToUpper())));
             return View(await productsThatMatchSearch.ToListAsync());
         }
 
