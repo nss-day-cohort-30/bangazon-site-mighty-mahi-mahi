@@ -31,7 +31,7 @@
                     @Html.DisplayFor(modelItem => item.Units)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.Cost)
+                    @Html.DisplayFor(modelItem => item.Total)
                 </td>
             </tr>
         }
@@ -39,7 +39,7 @@
 </table>
 <form asp-action="CompletePurchase">
     <div class="form-group">
-        <label asp-for="@Model.PaymentTypes" class="control-label">Choose a Payment Type</label>
+        <label asp-for="@Model.PaymentTypes" class="control-label"></label>
         <select asp-for="@Model.Order.PaymentTypeId" asp-items="@Model.PaymentTypes"></select>
     </div>
     @* CREATING HIDDEN INPUTS TO SEND IN FOR DB ORDER COLUMNS *@

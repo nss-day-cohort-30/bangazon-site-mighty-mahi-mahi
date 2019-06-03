@@ -86,6 +86,11 @@ namespace Bangazon.Controllers
                                     Text = li.Description,
                                     Value = li.PaymentTypeId.ToString()
                                }).ToList();
+            paymentTypes.Insert(0, new SelectListItem
+            {
+                Text = "Choose Payment Type...",
+                Value = "0"
+            });
 
             // Get all products associated with users open order, group them in anonymous typed object with Key, Count, Title
             var productsInCart = _context.OrderProduct
@@ -242,7 +247,7 @@ namespace Bangazon.Controllers
             order.DateCompleted = DateTime.Now;
             ModelState.Remove("order.User");
 
-            if (ModelState.IsValid)
+            if (ModelState.IsValid && order.PaymentTypeId != 0)
             {
                 try
                 {
