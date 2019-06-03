@@ -27,6 +27,47 @@ namespace Bangazon.Controllers
 
         private Task<ApplicationUser> GetCurrentUserAsync() => _userManager.GetUserAsync(HttpContext.User);
 
+        // GET: Orders/AddProduct
+        [Authorize]
+        public async Task<IActionResult> AddProduct([FromRoute]int? id)
+        {
+            // Find the product requested
+            Product productToAdd = await _context.Product.SingleOrDefaultAsync(p => p.ProductId == id);
+
+            // Get the current user
+            var user = await GetCurrentUserAsync();
+
+            // See if the user has an open order
+            var openOrder = await _context.Order.SingleOrDefaultAsync(o => o.User == user && o.PaymentTypeId == null);
+
+            // If no order, create one, else add to existing order
+            if (openOrder == null)
+            {
+                Order newOrder = new Order
+                {
+                    DateCreated = DateTime.Now,
+                    DateCompleted = null,
+                    UserId = user.Id,
+                    PaymentTypeId = null
+                };
+                _context.Order.Add(newOrder);
+                await _context.SaveChangesAsync();
+                openOrder = newOrder;
+            }
+
+            OrderProduct newOrderProduct = new OrderProduct
+            {
+                OrderId = openOrder.OrderId,
+                ProductId = productToAdd.ProductId
+            };
+            _context.Add(newOrderProduct);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index", "Products");
+        }
+
+
+
         //GET: Orders/ShoppingCart
         [Authorize]
         public async Task<IActionResult> ShoppingCart()
@@ -73,7 +114,7 @@ namespace Bangazon.Controllers
                 {
                     Product = product,
                     Units = p.count,
-                    Cost = (p.count * product.Price)
+                    Total = (p.count * product.Price)
                 };
 
                 shoppingCartLineItems.Add(newLineItem);
@@ -189,7 +230,7 @@ namespace Bangazon.Controllers
                 {
                     Product = product,
                     Units = p.count,
-                    Cost = (p.count * product.Price)
+                    Total = (p.count * product.Price)
                 };
 
                 shoppingCartLineItems.Add(newLineItem);
