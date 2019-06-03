@@ -22,7 +22,10 @@ namespace Bangazon.Controllers
         // GET: Products
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Product.Include(p => p.ProductType).Include(p => p.User);
+            var applicationDbContext = _context.Product
+                .Include(p => p.ProductType)
+                .Include(p => p.User)
+                .OrderByDescending(a => a.DateCreated).Take(20);
             return View(await applicationDbContext.ToListAsync());
         }
 
@@ -34,6 +37,7 @@ namespace Bangazon.Controllers
                 return NotFound();
             }
 
+            // orders the products added by the user by date created and then only selects the 20 latest with the .Take() method
             var product = await _context.Product
                 .Include(p => p.ProductType)
                 .Include(p => p.User)
