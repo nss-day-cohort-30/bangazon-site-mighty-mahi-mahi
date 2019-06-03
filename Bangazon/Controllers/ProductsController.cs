@@ -75,10 +75,13 @@ namespace Bangazon.Controllers
             // Remove the user from the model validation because it is
             // not information posted in the form
             ModelState.Remove("UserId");
+            ModelState.Remove("DateCreated");
+
             var user = await GetCurrentUserAsync();
             
             if (ModelState.IsValid)
             {
+                product.DateCreated = DateTime.Now;
                 product.User = user;
                 product.UserId = user.Id;
                 _context.Add(product);
