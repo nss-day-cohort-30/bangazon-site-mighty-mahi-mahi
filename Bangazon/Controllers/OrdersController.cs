@@ -137,6 +137,35 @@ namespace Bangazon.Controllers
         }
 
 
+        //GET: Orders/Reports
+        [Authorize]
+        public async Task<IActionResult> Reports()
+        {
+            return View();
+        }
+
+        //GET: Orders/MultipleOrders
+        public async Task<IActionResult> MultipleOrders()
+        {
+            // create list to hold users that have more than one open order
+            List<ApplicationUser> usersWithMultipleOrders = new List<ApplicationUser>();
+
+            // gets list of users that have open orders
+            var usersWithNullOrders = _context.ApplicationUsers
+                .Include(u => u.Orders)
+                .Where(u => u.Orders.Any(o => o.DateCompleted == null))
+                .ToList()
+                ;
+
+            // gets only users who have 1 or more open orders
+            var usersWithMultipleNullOrders = usersWithNullOrders.Where(u => u.Orders.Count() >= 2).ToList();
+
+            return View(usersWithMultipleNullOrders);
+        }
+
+
+
+
         // GET: Orders
         public async Task<IActionResult> Index()
         {
