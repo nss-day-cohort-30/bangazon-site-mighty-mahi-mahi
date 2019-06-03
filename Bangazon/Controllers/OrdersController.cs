@@ -62,7 +62,7 @@ namespace Bangazon.Controllers
                                           ;
 
             // create empty array to use as OrderDetailViewModel LineItem property
-            List<OrderLineItem> shoppingCartLinteItems = new List<OrderLineItem>();
+            List<OrderLineItem> shoppingCartLineItems = new List<OrderLineItem>();
 
             //Take each product, createa a new OrderLineItem object and place in placeholder array shoppingCartLineItems
             productsInCart.ForEach(p =>
@@ -76,14 +76,14 @@ namespace Bangazon.Controllers
                     Cost = (p.count * product.Price)
                 };
 
-                shoppingCartLinteItems.Add(newLineItem);
+                shoppingCartLineItems.Add(newLineItem);
             });
 
             //Create OrderDetailViewModel using current users open order and shoppingCartLineItems
             OrderDetailViewModel model = new OrderDetailViewModel
             {
                 Order = openOrder,
-                LineItems = shoppingCartLinteItems,
+                LineItems = shoppingCartLineItems,
                 PaymentTypes = paymentTypes
             };
 
@@ -150,24 +150,6 @@ namespace Bangazon.Controllers
             return View(order);
         }
 
-        //// GET: Orders/Edit/5
-        //public async Task<IActionResult> Edit(int? id)
-        //{
-        //    if (id == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    var order = await _context.Order.FindAsync(id);
-        //    if (order == null)
-        //    {
-        //        return NotFound();
-        //    }
-        //    ViewData["PaymentTypeId"] = new SelectList(_context.PaymentType, "PaymentTypeId", "AccountNumber", order.PaymentTypeId);
-        //    ViewData["UserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", order.UserId);
-        //    return View(order);
-        //}
-
         // POST: Orders/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -176,6 +158,44 @@ namespace Bangazon.Controllers
         public async Task<IActionResult> CompletePurchase([Bind("PaymentTypeId,OrderId,UserId," +
             "DateCreated,PaymentType,OrderProducts")] Order order)
         {
+            //using same code from ShoppingCart method to get list of line items within the order that is being completed.
+            //Line items cannot be passed to this method from the shopping cart view. 
+            // Get the current user
+            var user = await GetCurrentUserAsync();
+            // Get all products associated with users open order, group them in anonymous typed object with Key, Count, Title
+            var productsInCart = _context.OrderProduct
+                                          .Where(op => op.OrderId == order.OrderId)
+                                          .Select(op => op.Product)
+                                          .GroupBy(p => p.ProductId,
+                                            p => p.Title,
+                                            (key, Title) => new
+                                            {
+                                                key = key,
+                                                count = Title.Count(),
+                                                title = Title
+                                            })
+                                          .ToList()
+                                          ;
+
+            // create empty array to use as OrderDetailViewModel LineItem property
+            List<OrderLineItem> shoppingCartLineItems = new List<OrderLineItem>();
+
+            //Take each product, createa a new OrderLineItem object and place in placeholder array shoppingCartLineItems
+            productsInCart.ForEach(p =>
+            {
+                Product product = _context.Product.SingleOrDefault(cp => cp.ProductId == p.key);
+
+                OrderLineItem newLineItem = new OrderLineItem
+                {
+                    Product = product,
+                    Units = p.count,
+                    Cost = (p.count * product.Price)
+                };
+
+                shoppingCartLineItems.Add(newLineItem);
+            });
+
+
             //If you want to check errors in model state use the code below:
             //var errors = ModelState.Values.SelectMany(v => v.Errors);
             order.DateCompleted = DateTime.Now;
@@ -186,6 +206,18 @@ namespace Bangazon.Controllers
                 try
                 {
                     _context.Update(order);
+                    //await _context.SaveChangesAsync();
+                    shoppingCartLineItems.ForEach(li =>
+                    {
+                        //parameter 0
+                        int newQty = li.Product.Quantity - li.Units;
+                        //parameter 1
+                        int productId = li.Product.ProductId;
+                        //create new instance of product with updated quantity
+                        Product product = li.Product;
+                        product.Quantity = li.Product.Quantity - li.Units;
+                        _context.Update(product);
+                    });
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
