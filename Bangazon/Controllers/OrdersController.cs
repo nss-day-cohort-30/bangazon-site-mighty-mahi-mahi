@@ -157,7 +157,7 @@ namespace Bangazon.Controllers
                 .ToList()
                 ;
 
-            // gets only users who have 1 or more open orders
+            // gets only users who have 1 or more open ordersgi
             var usersWithMultipleNullOrders = usersWithNullOrders.Where(u => u.Orders.Count() >= 2).ToList();
 
             return View(usersWithMultipleNullOrders);
