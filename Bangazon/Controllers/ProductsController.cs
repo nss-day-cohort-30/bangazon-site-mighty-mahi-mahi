@@ -26,6 +26,14 @@ namespace Bangazon.Controllers
             return View(await applicationDbContext.ToListAsync());
         }
 
+        //GET: Products/SearchResults
+        public async Task<IActionResult> SearchResults(string SearchString)
+        {
+            var searchTerms = SearchString.Split(" ").ToList();
+            var productsThatMatchSearch = _context.Product.Where(p => searchTerms.Any(t => p.Title.Contains(t)));
+            return View(await productsThatMatchSearch.ToListAsync());
+        }
+
         // GET: Products/Details/5
         public async Task<IActionResult> Details(int? id)
         {

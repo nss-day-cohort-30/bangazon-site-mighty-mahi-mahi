@@ -1,20 +1,11 @@
 ﻿@model IEnumerable<Bangazon.Models.Product>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "SearchResults";
 }
 
-<h1>Index</h1>
-<form asp-controller="Products" asp-action="SearchResults">
-    <p>
-        Search Products: <input type="text" name="SearchString">
-        <input type="submit" value="Search" />
-    </p>
-</form>
+<h1>SearchResults</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
 <table class="table">
     <thead>
         <tr>
@@ -59,7 +50,7 @@
                     @Html.DisplayFor(modelItem => item.Description)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.Title)
+                    <a class="nav-link" asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId">@item.Title</a>
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.Price)
@@ -88,3 +79,4 @@
         }
     </tbody>
 </table>
+
