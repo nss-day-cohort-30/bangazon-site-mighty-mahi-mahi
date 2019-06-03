@@ -7,17 +7,135 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Bangazon.Data;
 using Bangazon.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
+using Bangazon.Models.OrderViewModels;
 
 namespace Bangazon.Controllers
 {
     public class OrdersController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public OrdersController(ApplicationDbContext context)
+        public OrdersController(ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
+
+        private Task<ApplicationUser> GetCurrentUserAsync() => _userManager.GetUserAsync(HttpContext.User);
+
+        // GET: Orders/AddProduct
+        [Authorize]
+        public async Task<IActionResult> AddProduct([FromRoute]int? id)
+        {
+            // Find the product requested
+            Product productToAdd = await _context.Product.SingleOrDefaultAsync(p => p.ProductId == id);
+
+            // Get the current user
+            var user = await GetCurrentUserAsync();
+
+            // See if the user has an open order
+            var openOrder = await _context.Order.SingleOrDefaultAsync(o => o.User == user && o.PaymentTypeId == null);
+
+            // If no order, create one, else add to existing order
+            if (openOrder == null)
+            {
+                Order newOrder = new Order
+                {
+                    DateCreated = DateTime.Now,
+                    DateCompleted = null,
+                    UserId = user.Id,
+                    PaymentTypeId = null
+                };
+                _context.Order.Add(newOrder);
+                await _context.SaveChangesAsync();
+                openOrder = newOrder;
+            }
+
+            OrderProduct newOrderProduct = new OrderProduct
+            {
+                OrderId = openOrder.OrderId,
+                ProductId = productToAdd.ProductId
+            };
+            _context.Add(newOrderProduct);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index", "Products");
+        }
+
+
+
+        //GET: Orders/ShoppingCart
+        [Authorize]
+        public async Task<IActionResult> ShoppingCart()
+        {
+            // Get the current user
+            var user = await GetCurrentUserAsync();
+
+            // See if the user has an open order
+            var openOrder = await _context.Order.SingleOrDefaultAsync(o => o.User == user && o.PaymentTypeId == null);
+
+            //Get user's payment types
+            List<SelectListItem> paymentTypes = _context.PaymentType
+                               .Where(pt => pt.UserId == user.Id)
+                               .Select(li => new SelectListItem
+                               {
+                                    Text = li.Description,
+                                    Value = li.PaymentTypeId.ToString()
+                               }).ToList();
+            paymentTypes.Insert(0, new SelectListItem
+            {
+                Text = "Choose Payment Type...",
+                Value = "0"
+            });
+
+            // Get all products associated with users open order, group them in anonymous typed object with Key, Count, Title
+            var productsInCart = _context.OrderProduct
+                                          .Where(op => op.OrderId == openOrder.OrderId)
+                                          .Select(op => op.Product)
+                                          .GroupBy(p => p.ProductId,
+                                            p => p.Title,
+                                            (key, Title) => new
+                                            {
+                                                key = key,
+                                                count = Title.Count(),
+                                                title = Title
+                                            })
+                                          .ToList()
+                                          ;
+
+            // create empty array to use as OrderDetailViewModel LineItem property
+            List<OrderLineItem> shoppingCartLineItems = new List<OrderLineItem>();
+
+            //Take each product, createa a new OrderLineItem object and place in placeholder array shoppingCartLineItems
+            productsInCart.ForEach(p =>
+            {
+                Product product =  _context.Product.SingleOrDefault(cp => cp.ProductId == p.key);
+
+                OrderLineItem newLineItem = new OrderLineItem
+                {
+                    Product = product,
+                    Units = p.count,
+                    Total = (p.count * product.Price)
+                };
+
+                shoppingCartLineItems.Add(newLineItem);
+            });
+
+            //Create OrderDetailViewModel using current users open order and shoppingCartLineItems
+            OrderDetailViewModel model = new OrderDetailViewModel
+            {
+                Order = openOrder,
+                LineItems = shoppingCartLineItems,
+                PaymentTypes = paymentTypes
+            };
+
+            return View(model);
+        }
+
 
         // GET: Orders
         public async Task<IActionResult> Index()
@@ -31,7 +149,13 @@ namespace Bangazon.Controllers
         {
             if (id == null)
             {
-                return NotFound();
+                // Get the current user
+                var user = await GetCurrentUserAsync();
+
+                // See if the user has an open order
+                var openOrder = await _context.Order.SingleOrDefaultAsync(o => o.User == user && o.PaymentTypeId == null);
+
+                return View(openOrder);
             }
 
             var order = await _context.Order
@@ -72,41 +196,74 @@ namespace Bangazon.Controllers
             return View(order);
         }
 
-        // GET: Orders/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var order = await _context.Order.FindAsync(id);
-            if (order == null)
-            {
-                return NotFound();
-            }
-            ViewData["PaymentTypeId"] = new SelectList(_context.PaymentType, "PaymentTypeId", "AccountNumber", order.PaymentTypeId);
-            ViewData["UserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", order.UserId);
-            return View(order);
-        }
-
         // POST: Orders/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("OrderId,DateCreated,DateCompleted,UserId,PaymentTypeId")] Order order)
+        public async Task<IActionResult> CompletePurchase([Bind("PaymentTypeId,OrderId,UserId," +
+            "DateCreated,PaymentType,OrderProducts")] Order order)
         {
-            if (id != order.OrderId)
-            {
-                return NotFound();
-            }
+            //using same code from ShoppingCart method to get list of line items within the order that is being completed.
+            //Line items cannot be passed to this method from the shopping cart view. 
+            // Get the current user
+            var user = await GetCurrentUserAsync();
+            // Get all products associated with users open order, group them in anonymous typed object with Key, Count, Title
+            var productsInCart = _context.OrderProduct
+                                          .Where(op => op.OrderId == order.OrderId)
+                                          .Select(op => op.Product)
+                                          .GroupBy(p => p.ProductId,
+                                            p => p.Title,
+                                            (key, Title) => new
+                                            {
+                                                key = key,
+                                                count = Title.Count(),
+                                                title = Title
+                                            })
+                                          .ToList()
+                                          ;
 
-            if (ModelState.IsValid)
+            // create empty array to use as OrderDetailViewModel LineItem property
+            List<OrderLineItem> shoppingCartLineItems = new List<OrderLineItem>();
+
+            //Take each product, createa a new OrderLineItem object and place in placeholder array shoppingCartLineItems
+            productsInCart.ForEach(p =>
+            {
+                Product product = _context.Product.SingleOrDefault(cp => cp.ProductId == p.key);
+
+                OrderLineItem newLineItem = new OrderLineItem
+                {
+                    Product = product,
+                    Units = p.count,
+                    Total = (p.count * product.Price)
+                };
+
+                shoppingCartLineItems.Add(newLineItem);
+            });
+
+
+            //If you want to check errors in model state use the code below:
+            //var errors = ModelState.Values.SelectMany(v => v.Errors);
+            order.DateCompleted = DateTime.Now;
+            ModelState.Remove("order.User");
+
+            if (ModelState.IsValid && order.PaymentTypeId != 0)
             {
                 try
                 {
                     _context.Update(order);
+                    //await _context.SaveChangesAsync();
+                    shoppingCartLineItems.ForEach(li =>
+                    {
+                        //parameter 0
+                        int newQty = li.Product.Quantity - li.Units;
+                        //parameter 1
+                        int productId = li.Product.ProductId;
+                        //create new instance of product with updated quantity
+                        Product product = li.Product;
+                        product.Quantity = li.Product.Quantity - li.Units;
+                        _context.Update(product);
+                    });
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -117,14 +274,21 @@ namespace Bangazon.Controllers
                     }
                     else
                     {
+                        order.PaymentTypeId = null;
+                        order.DateCompleted = null;
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Index", "Products");
             }
-            ViewData["PaymentTypeId"] = new SelectList(_context.PaymentType, "PaymentTypeId", "AccountNumber", order.PaymentTypeId);
-            ViewData["UserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", order.UserId);
-            return View(order);
+            else
+            {
+                order.PaymentTypeId = null;
+                order.DateCompleted = null;
+            }
+            //ViewData["PaymentTypeId"] = new SelectList(_context.PaymentType, "PaymentTypeId", "AccountNumber", order.PaymentTypeId);
+            //ViewData["UserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", order.UserId);
+            return  RedirectToAction(nameof(ShoppingCart));
         }
 
         // GET: Orders/Delete/5

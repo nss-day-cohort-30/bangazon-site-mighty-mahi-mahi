@@ -25,9 +25,11 @@ namespace Bangazon.Models
 
     [Required]
     [DisplayFormat(DataFormatString = "{0:C}")]
+    [Display(Name = "Price Per")]
     public double Price { get; set; }
 
     [Required]
+    [Display(Name = "Qty Avail")]
     public int Quantity { get; set; }
 
     [Required]
