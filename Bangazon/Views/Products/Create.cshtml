@@ -13,8 +13,11 @@
     <div class="col-md-4">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            @* CREATING HIDDEN INPUTS TO CAPTURE DATE/TIME AT THE TIME THE ORDER WAS CREATED INSTEAD OF USER INPUTTING DATE *@
-            <input type="hidden" asp-for="@DateCreated" value="@DateCreated" />
+            <div class="form-group">
+                <label asp-for="DateCreated" class="control-label"></label>
+                <input asp-for="DateCreated" class="form-control" />
+                <span asp-validation-for="DateCreated" class="text-danger"></span>
+            </div>
             <div class="form-group">
                 <label asp-for="Description" class="control-label"></label>
                 <input asp-for="Description" class="form-control" />
