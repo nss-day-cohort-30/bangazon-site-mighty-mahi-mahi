@@ -36,7 +36,7 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="ProductTypes" asp-action="Index">Product Types</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Sell Something</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Products" asp-action="Create">Sell Something</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Orders" asp-action="ShoppingCart">View Cart</a>
@@ -44,7 +44,16 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
+                        <li>
+                            <form asp-controller="Products" asp-action="SearchResults">
+                                <p>
+                                    Search Products: <input type="text" name="SearchString">
+                                    <input type="submit" value="Search" />
+                                </p>
+                            </form>
+                        </li>
                     </ul>
+
                 </div>
             </div>
         </nav>
