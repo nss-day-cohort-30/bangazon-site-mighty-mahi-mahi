@@ -183,7 +183,12 @@ namespace Bangazon.Controllers
                     ProductType = type.First(),
                     Count = type.Count()
                 })
-                .ToList();
+                .ToList()
+                .OrderByDescending(apt => apt.Count)
+                .ToList()
+                .Take(5)
+                .ToList()
+                ;
 
             return View(abandonedProductTypes);
         }
