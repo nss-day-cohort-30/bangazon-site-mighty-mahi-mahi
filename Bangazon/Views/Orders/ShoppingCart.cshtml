@@ -23,17 +23,23 @@
     <tbody>
         @foreach (var item in Model.LineItems)
         {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Product.Title)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Units)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Total)
-                </td>
-            </tr>
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Product.Title)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Units)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Total)
+            </td>
+            <td>
+                <form asp-action="Delete">
+                    <input type="hidden" asp-for="Order" />
+                    <input type="submit" value="Delete" class="btn btn-danger" />
+                </form>
+            </td>
+        </tr>
         }
     </tbody>
 </table>
