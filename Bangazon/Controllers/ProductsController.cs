@@ -28,25 +28,32 @@ namespace Bangazon.Controllers
             _userManager.GetUserAsync(HttpContext.User);
 
         // GET: Products
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string SearchString)
         {
+            // if user has entered search term into search bar, list of products containing the search string will be returned
+            if (SearchString != null)
+            {
+                var applicationDbContext1 = _context.Product.Include(p => p.ProductType)
+                   .Include(p => p.User)
 
-            var applicationDbContext = _context.Product
-                .Include(p => p.ProductType)
-                .Include(p => p.User)
-                .OrderByDescending(a => a.DateCreated).Take(20);
+                   .Where(p => p.Title.Contains(SearchString) || p.City.Contains(SearchString))
 
-            return View(await applicationDbContext.ToListAsync());
+                   .OrderByDescending(p => p.DateCreated);
+                return View(await applicationDbContext1.ToListAsync());
+            }
+            // if the search bar is blank the complete list of products will be returned to the user
+            else {
+                var applicationDbContext = _context.Product
+                    .Include(p => p.ProductType)
+                    .Include(p => p.User)
+                    .OrderByDescending(a => a.DateCreated).Take(20);
+
+                return View(await applicationDbContext.ToListAsync());
+            }
+            
         }
 
-        //GET: Products/SearchResults
-        public async Task<IActionResult> SearchResults(string SearchString)
-        {
-            var searchTerms = SearchString.Split(" ").ToList();
-            var productsThatMatchSearch = _context.Product.Where(p => searchTerms.Any(t => p.Title.ToUpper().Contains(t.ToUpper())));
-            return View(await productsThatMatchSearch.ToListAsync());
-        }
-
+      
         // GET: Products/Details/5
         public async Task<IActionResult> Details(int? id)
         {
