@@ -83,8 +83,8 @@ namespace Bangazon.Controllers
                                .Where(pt => pt.UserId == user.Id)
                                .Select(li => new SelectListItem
                                {
-                                    Text = li.Description,
-                                    Value = li.PaymentTypeId.ToString()
+                                   Text = li.Description,
+                                   Value = li.PaymentTypeId.ToString()
                                }).ToList();
             paymentTypes.Insert(0, new SelectListItem
             {
@@ -113,7 +113,7 @@ namespace Bangazon.Controllers
             //Take each product, createa a new OrderLineItem object and place in placeholder array shoppingCartLineItems
             productsInCart.ForEach(p =>
             {
-                Product product =  _context.Product.SingleOrDefault(cp => cp.ProductId == p.key);
+                Product product = _context.Product.SingleOrDefault(cp => cp.ProductId == p.key);
 
                 OrderLineItem newLineItem = new OrderLineItem
                 {
@@ -213,6 +213,27 @@ namespace Bangazon.Controllers
                 ;
 
             return View(usersOpenOrders);
+        }
+
+        //GET: Orders/OrderHistory: 
+        [Authorize]
+        public async Task<IActionResult> OrderHistory()
+        {
+            // Get the current user
+            var user = await GetCurrentUserAsync();
+
+            // Get List of Completed Orders
+            var usersPastOrders = _context.Order
+                .Include(o => o.User)
+                .Where(o => o.User == user)
+                .Where(o => o.DateCompleted != null)
+                .Include(o => o.OrderProducts)
+                .ThenInclude(op => op.Product)
+                .OrderByDescending(o => o.DateCompleted)
+                .ToList()
+                ;
+
+            return View(usersPastOrders);
         }
 
 
@@ -369,7 +390,7 @@ namespace Bangazon.Controllers
             }
             //ViewData["PaymentTypeId"] = new SelectList(_context.PaymentType, "PaymentTypeId", "AccountNumber", order.PaymentTypeId);
             //ViewData["UserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", order.UserId);
-            return  RedirectToAction(nameof(ShoppingCart));
+            return RedirectToAction(nameof(ShoppingCart));
         }
 
         // POST: Orders/DeleteProduct
@@ -384,11 +405,11 @@ namespace Bangazon.Controllers
             // Find the product requested
             List<OrderProduct> productToDelete = await _context.OrderProduct
                 .Where(op => op.OrderId == openOrder.OrderId && op.ProductId == id).ToListAsync();
-                
-                
-            foreach(var product in productToDelete)
+
+
+            foreach (var product in productToDelete)
             {
-            _context.Remove(product);
+                _context.Remove(product);
             }
             await _context.SaveChangesAsync();
 
