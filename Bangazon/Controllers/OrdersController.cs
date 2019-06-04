@@ -10,6 +10,7 @@ using Bangazon.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Bangazon.Models.OrderViewModels;
+using Bangazon.Models.ReportViewModels;
 
 namespace Bangazon.Controllers
 {
@@ -160,6 +161,31 @@ namespace Bangazon.Controllers
             var usersWithMultipleNullOrders = usersWithNullOrders.Where(u => u.Orders.Count() >= 2).ToList();
 
             return View(usersWithMultipleNullOrders);
+        }
+
+        //GET: Orders/AbandonedProducts
+        public async Task<IActionResult> AbandonedProducts()
+        {
+            // get a list of products that are in open orders
+            var productsInOpenOrders = _context.Product
+                .Include(p => p.OrderProducts)
+                .ThenInclude(op => op.Order)
+                .Where(p => p.OrderProducts.Any(op => op.Order.DateCompleted == null))
+                .Include(p => p.ProductType)
+                .ToList()
+                ;
+
+            var abandonedProductTypes = productsInOpenOrders
+                .GroupBy(p => p.ProductTypeId,
+                p => p.ProductType,
+                (id, type) => new AbandonedProductTypes
+                {
+                    ProductType = type.First(),
+                    Count = type.Count()
+                })
+                .ToList();
+
+            return View(abandonedProductTypes);
         }
 
 
