@@ -158,14 +158,7 @@ namespace Bangazon.Controllers
                 ;
 
             // gets only users who have 1 or more open ordersgi
-            var usersWithMultipleNullOrders = usersWithNullOrders
-                .Where(u => u.Orders
-                    .Where(o => o.DateCompleted == null)
-                    .Count() >= 2)
-                .ToList()
-                .OrderByDescending(u => u.Orders.Where(o => o.DateCompleted == null).Count())
-                .ToList()
-                ;
+            var usersWithMultipleNullOrders = usersWithNullOrders.Where(u => u.Orders.Count() >= 2).ToList();
 
             return View(usersWithMultipleNullOrders);
         }
@@ -198,21 +191,6 @@ namespace Bangazon.Controllers
                 ;
 
             return View(abandonedProductTypes);
-        }
-
-        //GET: Orders/IncompleteOrders
-        public async Task<IActionResult> IncompleteOrders()
-        {
-            // get a list of users with orders
-            var usersOpenOrders = _context.ApplicationUsers
-                .Include(au => au.Orders)
-                .ThenInclude(o => o.OrderProducts)
-                .ThenInclude(op => op.Product)
-                .OrderBy(au => au.LastName)
-                .ToList()
-                ;
-
-            return View(usersOpenOrders);
         }
 
 
@@ -420,12 +398,29 @@ namespace Bangazon.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            var user = await GetCurrentUserAsync();
 
-            var order = await _context.Order.FindAsync(id);
+            var openOrder = await _context.Order.SingleOrDefaultAsync(o => o.User == user && o.PaymentTypeId == null);
 
-            _context.Order.Remove(order.OrderId);           
+
+            // Find the product requested
+            OrderProduct OrderToDelete = await _context.OrderProduct
+                .Where(op => op.OrderId == openOrder.OrderId).FirstAsync();
+
+            // Remove products from the cart    
+           
+                _context.Remove(openOrder);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return RedirectToAction("ShoppingCart", "Orders");
+
+
+
+
+            /*  var order = await _context.Order.FindAsync(id);
+              _context.Order.Remove(order);
+              await _context.SaveChangesAsync();
+              return RedirectToAction(nameof(Index)); */
         }
 
         private bool OrderExists(int id)
