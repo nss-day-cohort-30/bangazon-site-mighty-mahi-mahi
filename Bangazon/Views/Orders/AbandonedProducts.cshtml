@@ -1,0 +1,33 @@
+﻿@model List<Bangazon.Models.ReportViewModels.AbandonedProductTypes>
+@{
+    ViewData["Title"] = "AbandonedProducts";
+}
+
+<h1>AbandonedProducts</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Product Type
+            </th>
+            <th>
+                # of Products of this type in open orders
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @item.ProductType.Label
+                </td>
+                <td>
+                    @item.Count
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
