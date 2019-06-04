@@ -236,9 +236,6 @@ namespace Bangazon.Controllers
             return View(usersPastOrders);
         }
 
-
-
-
         // GET: Orders
         public async Task<IActionResult> Index()
         {
@@ -247,29 +244,54 @@ namespace Bangazon.Controllers
         }
 
         // GET: Orders/Details/5
+        [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
+            // Get the current user
+            var user = await GetCurrentUserAsync();
+
+            // Get all products associated with completed order, group them in anonymous typed object with Key, Count, Title
+            var productsInOrder = _context.OrderProduct
+                                          .Where(op => op.OrderId == id)
+                                          .Select(op => op.Product)
+                                          .GroupBy(p => p.ProductId,
+                                            p => p.Title,
+                                            (key, Title) => new
+                                            {
+                                                key = key,
+                                                count = Title.Count(),
+                                                title = Title
+                                            })
+                                          .ToList()
+                                          ;
+
+            // create empty array to use as OrderDetailViewModel LineItem property
+            List<OrderLineItem> completedOrderLineItems = new List<OrderLineItem>();
+
+            //Take each product, createa a new OrderLineItem object and place in placeholder array shoppingCartLineItems
+            productsInOrder.ForEach(p =>
             {
-                // Get the current user
-                var user = await GetCurrentUserAsync();
+                Product product = _context.Product.SingleOrDefault(cp => cp.ProductId == p.key);
 
-                // See if the user has an open order
-                var openOrder = await _context.Order.SingleOrDefaultAsync(o => o.User == user && o.PaymentTypeId == null);
+                OrderLineItem newLineItem = new OrderLineItem
+                {
+                    Product = product,
+                    Units = p.count,
+                    Total = (p.count * product.Price)
+                };
 
-                return View(openOrder);
-            }
+                completedOrderLineItems.Add(newLineItem);
+            });
 
-            var order = await _context.Order
-                .Include(o => o.PaymentType)
-                .Include(o => o.User)
-                .FirstOrDefaultAsync(m => m.OrderId == id);
-            if (order == null)
+            //Create OrderDetailViewModel using current users open order and shoppingCartLineItems
+            OrderDetailViewModel model = new OrderDetailViewModel
             {
-                return NotFound();
-            }
+                Order = _context.Order.FirstOrDefault(o => o.OrderId == id),
+                LineItems = completedOrderLineItems,
+                PaymentTypes = null
+            };
 
-            return View(order);
+            return View(model);
         }
 
         // GET: Orders/Create
