@@ -23,17 +23,23 @@
     <tbody>
         @foreach (var item in Model.LineItems)
         {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Product.Title)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Units)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Total)
-                </td>
-            </tr>
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Product.Title)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Units)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Total)
+            </td>
+            <td>
+                <form asp-action="DeleteProduct" asp-route-id="@item.Product.ProductId">
+                    <input type="hidden" asp-for="@Model.LineItems" />
+                    <input type="submit" value="Delete" class="btn btn-danger" />
+                </form>
+            </td>
+        </tr>
         }
     </tbody>
 </table>
@@ -50,7 +56,7 @@
 
 
     <div class="form-group">
-        <input type="submit" value="Complete Purhcase" class="btn btn-primary" />
+        <input type="submit" value="Complete Purchase" class="btn btn-primary" />
     </div>
 </form>
 

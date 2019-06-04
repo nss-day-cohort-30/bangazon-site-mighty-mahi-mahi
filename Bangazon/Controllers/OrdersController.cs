@@ -350,6 +350,29 @@ namespace Bangazon.Controllers
             return  RedirectToAction(nameof(ShoppingCart));
         }
 
+        // POST: Orders/DeleteProduct
+        [Authorize]
+        public async Task<IActionResult> DeleteProduct([FromRoute]int? id)
+        {
+            var user = await GetCurrentUserAsync();
+
+            var openOrder = await _context.Order.SingleOrDefaultAsync(o => o.User == user && o.PaymentTypeId == null);
+
+
+            // Find the product requested
+            List<OrderProduct> productToDelete = await _context.OrderProduct
+                .Where(op => op.OrderId == openOrder.OrderId && op.ProductId == id).ToListAsync();
+                
+                
+            foreach(var product in productToDelete)
+            {
+            _context.Remove(product);
+            }
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("ShoppingCart", "Orders");
+        }
+
         // GET: Orders/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
