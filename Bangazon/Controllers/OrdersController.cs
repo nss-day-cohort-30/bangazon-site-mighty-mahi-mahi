@@ -200,6 +200,21 @@ namespace Bangazon.Controllers
             return View(abandonedProductTypes);
         }
 
+        //GET: Orders/IncompleteOrders
+        public async Task<IActionResult> IncompleteOrders()
+        {
+            // get a list of users with orders
+            var usersOpenOrders = _context.ApplicationUsers
+                .Include(au => au.Orders)
+                .ThenInclude(o => o.OrderProducts)
+                .ThenInclude(op => op.Product)
+                .OrderBy(au => au.LastName)
+                .ToList()
+                ;
+
+            return View(usersOpenOrders);
+        }
+
 
 
 
