@@ -158,7 +158,14 @@ namespace Bangazon.Controllers
                 ;
 
             // gets only users who have 1 or more open ordersgi
-            var usersWithMultipleNullOrders = usersWithNullOrders.Where(u => u.Orders.Count() >= 2).ToList();
+            var usersWithMultipleNullOrders = usersWithNullOrders
+                .Where(u => u.Orders
+                    .Where(o => o.DateCompleted == null)
+                    .Count() >= 2)
+                .ToList()
+                .OrderByDescending(u => u.Orders.Where(o => o.DateCompleted == null).Count())
+                .ToList()
+                ;
 
             return View(usersWithMultipleNullOrders);
         }
@@ -191,6 +198,21 @@ namespace Bangazon.Controllers
                 ;
 
             return View(abandonedProductTypes);
+        }
+
+        //GET: Orders/IncompleteOrders
+        public async Task<IActionResult> IncompleteOrders()
+        {
+            // get a list of users with orders
+            var usersOpenOrders = _context.ApplicationUsers
+                .Include(au => au.Orders)
+                .ThenInclude(o => o.OrderProducts)
+                .ThenInclude(op => op.Product)
+                .OrderBy(au => au.LastName)
+                .ToList()
+                ;
+
+            return View(usersOpenOrders);
         }
 
 
