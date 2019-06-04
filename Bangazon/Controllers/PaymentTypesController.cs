@@ -111,6 +111,7 @@ namespace Bangazon.Controllers
                 return NotFound();
             }
 
+            ModelState.Remove("User");
             if (ModelState.IsValid)
             {
                 try
@@ -129,7 +130,7 @@ namespace Bangazon.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Profile", "Home");
             }
             ViewData["UserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", paymentType.UserId);
             return View(paymentType);
@@ -162,7 +163,7 @@ namespace Bangazon.Controllers
             var paymentType = await _context.PaymentType.FindAsync(id);
             _context.PaymentType.Remove(paymentType);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Profile", "Home");
         }
 
         private bool PaymentTypeExists(int id)

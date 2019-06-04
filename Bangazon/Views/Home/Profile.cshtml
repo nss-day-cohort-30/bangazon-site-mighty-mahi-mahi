@@ -29,9 +29,10 @@
             </dd>
         </dl>
         <div>
-            <a asp-controller="PaymentTypes" asp-action="Edit" asp-route-id="@type.PaymentTypeId">Edit</a> |
-            <a asp-action="Index">Back to List</a>
+            <a asp-controller="PaymentTypes" asp-action="Edit" asp-route-id="@type.PaymentTypeId">Edit</a> | 
+            <a asp-controller="PaymentTypes" asp-action="Delete" asp-route-id="@type.PaymentTypeId">Delete</a>
         </div>
         <hr />
     }
+    <a asp-controller="Products" asp-action="Index">Back to Home Screen</a>
 </div>

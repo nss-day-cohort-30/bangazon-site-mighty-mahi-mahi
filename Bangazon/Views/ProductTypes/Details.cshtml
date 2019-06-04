@@ -10,21 +10,20 @@
     <h4>@Model.Label</h4>
     <hr />
     <dl class="row">
-        
-            @foreach (var item in Model.Products)
 
-            {
-        
+        @foreach (var item in Model.Products)
+
+        {
             <dt class="col-sm-2">
                 <a asp-action="Details" asp-controller="Products" asp-route-id="@item.ProductId"> @Html.DisplayFor(model => item.Title) </a>
-</dt>
-       
-                <dd class=" col-sm-10">
-                    @Html.DisplayTextFor(model => item.Description)
-                </dd>
-            }
-            
-</dl>
+            </dt>
+
+            <dd class=" col-sm-10">
+                @Html.DisplayTextFor(model => item.Description)
+            </dd>
+        }
+
+    </dl>
 </div>
 <div>
     <a asp-action="Edit" asp-route-id="@Model.ProductTypeId">Edit</a> |
