@@ -363,7 +363,7 @@ namespace Bangazon.Controllers
             List<OrderProduct> productToDelete = await _context.OrderProduct
                 .Where(op => op.OrderId == openOrder.OrderId && op.ProductId == id).ToListAsync();
                 
-                
+            // Remove products from the cart    
             foreach(var product in productToDelete)
             {
             _context.Remove(product);
@@ -398,8 +398,10 @@ namespace Bangazon.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+
             var order = await _context.Order.FindAsync(id);
-            _context.Order.Remove(order);
+
+            _context.Order.Remove(order.OrderId);           
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
