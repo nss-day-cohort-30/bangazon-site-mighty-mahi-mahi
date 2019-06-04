@@ -66,11 +66,16 @@ namespace Bangazon.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("PaymentTypeId,DateCreated,Description,AccountNumber,UserId")] PaymentType paymentType)
+        public async Task<IActionResult> Create([Bind("PaymentTypeId,DateCreated,Description,AccountNumber,UserId,ExpirationDate")] PaymentType paymentType)
         {
+            //if (paymentType.ExpirationDate < DateTime.Today)
+            //{
+            //    return View(paymentType);
+            //}
+
             ModelState.Remove("User");
             ModelState.Remove("UserId");
-            if (ModelState.IsValid)
+            if (ModelState.IsValid )
             {
                 var user = await GetCurrentUserAsync();
                 paymentType.User = user;
