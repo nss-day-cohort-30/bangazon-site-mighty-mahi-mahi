@@ -34,8 +34,8 @@
                 @Html.DisplayFor(modelItem => item.Total)
             </td>
             <td>
-                <form asp-action="Delete">
-                    <input type="hidden" asp-for="Order" />
+                <form asp-action="DeleteProduct" asp-route-id="@item.Product.ProductId">
+                    <input type="hidden" asp-for="@Model.LineItems" />
                     <input type="submit" value="Delete" class="btn btn-danger" />
                 </form>
             </td>
@@ -56,7 +56,7 @@
 
 
     <div class="form-group">
-        <input type="submit" value="Complete Purhcase" class="btn btn-primary" />
+        <input type="submit" value="Complete Purchase" class="btn btn-primary" />
     </div>
 </form>
 

@@ -180,7 +180,7 @@ namespace Bangazon.Controllers
                 return NotFound();
             }
 
-            return View(product);
+            return RedirectToAction(nameof(Delete));
         }
 
         // POST: Products/Delete/5
