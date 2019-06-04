@@ -158,7 +158,14 @@ namespace Bangazon.Controllers
                 ;
 
             // gets only users who have 1 or more open ordersgi
-            var usersWithMultipleNullOrders = usersWithNullOrders.Where(u => u.Orders.Count() >= 2).ToList();
+            var usersWithMultipleNullOrders = usersWithNullOrders
+                .Where(u => u.Orders
+                    .Where(o => o.DateCompleted == null)
+                    .Count() >= 2)
+                .ToList()
+                .OrderByDescending(u => u.Orders.Where(o => o.DateCompleted == null).Count())
+                .ToList()
+                ;
 
             return View(usersWithMultipleNullOrders);
         }
