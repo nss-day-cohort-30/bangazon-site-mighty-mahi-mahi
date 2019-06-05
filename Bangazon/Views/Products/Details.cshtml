@@ -1,8 +1,8 @@
-﻿@model Bangazon.Models.Product
+﻿@model Bangazon.Models.ProductDetailsModel
 
 @{
     ViewData["Title"] = "Details";
-    ViewData["ProductId"] = Model.ProductId;
+    ViewData["ProductId"] = Model.Product.ProductId;
 }
 
 <h1>Details</h1>
@@ -12,35 +12,62 @@
     <hr />
     <dl class="row">
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Title)
+            @Html.DisplayNameFor(model => model.Product.Title)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Title)
+            @Html.DisplayFor(model => model.Product.Title)
         </dd>
+        <div>
+            <div>
+                @Model.Product.Likes.Where(l => l.IsLiked == true).Count() Likes by others
+            </div>
+            @if (Model.UserHasOpinion == false)
+            {
+                <form asp-action="CreateLike" asp-route-id="@Model.Product.ProductId">
+                    <input type="hidden" asp-for="ButtonValue" value="true" />
+                    <input type="submit" value="Like" class="btn btn-outline-info" />
+                </form>
+                <form asp-action="CreateLike" asp-route-id="@Model.Product.ProductId">
+                    <input type="hidden" asp-for="ButtonValue" value="false" />
+                    <input type="submit" value="Dislike" class="btn btn-outline-danger" />
+                </form>
+            }
+            else
+            {
+                if (Model.UserLikes == true)
+                {
+                    <p>You like this item</p>
+                }
+                else
+                {
+                    <p>You dislike this item</p>
+                }
+            }
+        </div>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
+            @Html.DisplayNameFor(model => model.Product.Description)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Description)
+            @Html.DisplayFor(model => model.Product.Description)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Quantity)
+            @Html.DisplayNameFor(model => model.Product.Quantity)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Quantity)
+            @Html.DisplayFor(model => model.Product.Quantity)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.City)
+            @Html.DisplayNameFor(model => model.Product.City)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.City)
+            @Html.DisplayFor(model => model.Product.City)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.ImagePath)
+            @Html.DisplayNameFor(model => model.Product.ImagePath)
         </dt>
         <dd>
 
-        <img src="/images/@Model.ImagePath" class="imageDisplay"/>
+            <img src="/images/@Model.Product.ImagePath" class="imageDisplay" />
 
         </dd>
     </dl>
@@ -49,6 +76,6 @@
 <div>
     @*<a asp-action="Edit" asp-route-id="@Model.ProductId">Edit</a> |*@
     <a asp-action="Index">Back to List</a> |
-    <a asp-controller="Orders" asp-action="AddProduct" asp-route-id="@Model.ProductId">Add To Order</a>
+    <a asp-controller="Orders" asp-action="AddProduct" asp-route-id="@Model.Product.ProductId">Add To Order</a>
 
 </div>

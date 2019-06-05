@@ -16,6 +16,7 @@ namespace Bangazon.Data {
         public DbSet<Order> Order { get; set; }
         public DbSet<OrderProduct> OrderProduct { get; set; }
         public DbSet<UserProductRating> UserProductRating { get; set; }
+        public DbSet<UserProductLike> UserProductLike { get; set; }
 
         protected override void OnModelCreating (ModelBuilder modelBuilder) {
             base.OnModelCreating (modelBuilder);
