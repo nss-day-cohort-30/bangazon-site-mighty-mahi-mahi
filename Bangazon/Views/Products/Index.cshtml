@@ -4,7 +4,13 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+@if (ViewBag.SearchString == true)
+{
+    <h1>Search Results</h1>
+}
+else {
+    <h1>Index</h1>
+}
 
 
 <p>
@@ -32,6 +38,9 @@
                 @Html.DisplayNameFor(model => model.City)
             </th>
             <th>
+                @Html.DisplayNameFor(model => model.ImagePath)
+            </th>
+            <th>
                 @Html.DisplayNameFor(model => model.ProductType)
             </th>
             <th></th>
@@ -57,6 +66,12 @@
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.City)
+            </td>
+            <td>
+                @if (ViewBag.SearchString = true)
+                {
+                    <img src="~/images/@item.ImagePath" id="imageDisplay" />
+                }
             </td>
             <td>
                 <a asp-controller="ProductTypes" asp-action="Details" asp-route-id="@item.ProductTypeId">@Html.DisplayFor(modelItem => item.ProductType.Label)</a>
