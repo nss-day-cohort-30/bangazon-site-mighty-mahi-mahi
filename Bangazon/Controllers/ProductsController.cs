@@ -43,7 +43,8 @@ namespace Bangazon.Controllers
                 return View(await applicationDbContext1.ToListAsync());
             }
             // if the search bar is blank the complete list of products will be returned to the user
-            else {
+            else
+            {
                 var applicationDbContext = _context.Product
                     .Include(p => p.ProductType)
                     .Include(p => p.User)
@@ -51,10 +52,10 @@ namespace Bangazon.Controllers
 
                 return View(await applicationDbContext.ToListAsync());
             }
-            
+
         }
 
-      
+
         // GET: Products/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -93,13 +94,14 @@ namespace Bangazon.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(UploadPictureViewModel model)
         {
+
             // Remove the user from the model validation because it is
             // not information posted in the form
             ModelState.Remove("UserId");
             ModelState.Remove("DateCreated");
 
             var user = await GetCurrentUserAsync();
-            
+
             if (ModelState.IsValid)
             {
                 model.Product.DateCreated = DateTime.Now;
@@ -227,13 +229,51 @@ namespace Bangazon.Controllers
         [Authorize]
         public async Task<IActionResult> GetUserProducts()
         {
+            // Get current User
             var user = await GetCurrentUserAsync();
 
-            var applicationDbContext = _context.Product
-                .Include(p => p.ProductType)
-                .Where(p => p.User == user);
+            // Get all products the User has listed
+            var usersListedProducts = _context.Product
+                .Where(p => p.UserId == user.Id)
+                .ToList();
 
-            return View(await applicationDbContext.ToListAsync());
+            //Create list to hold all of user's product status models
+            List<UserProductStatusModel> UsersProductStatusModels = new List<UserProductStatusModel>();
+
+            // Create UserProductStatusModel for each of the user's listed products and add them to the list created above
+            usersListedProducts.ForEach(p =>
+            {
+                //Create an annonymous object with the number sold for the current product
+                var numberSold = _context.OrderProduct
+                .Where(op => op.Order.DateCompleted != null)
+                .Where(op => op.ProductId == p.ProductId)
+                .Include(op => op.Product)
+                .GroupBy(op => op.Product,
+                op => op.ProductId,
+                (key, productId) => new
+                {
+                    id = key.ProductId,
+                    NumberSold = productId.Count()
+                })
+                .DefaultIfEmpty(new
+                {
+                    id = p.ProductId,
+                    NumberSold = 0
+                })
+                .FirstOrDefault()
+                ;                
+
+                //create a UserProductStatusModel for the current product and add it to the list that will be passed into the view
+                UserProductStatusModel productStatusModel = new UserProductStatusModel
+                {
+                    Product = p,
+                    NumberSold = numberSold.NumberSold
+                };
+
+                UsersProductStatusModels.Add(productStatusModel);
+            });
+
+            return View(UsersProductStatusModels);
         }
     }
 }

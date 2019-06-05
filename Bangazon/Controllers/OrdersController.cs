@@ -83,8 +83,8 @@ namespace Bangazon.Controllers
                                .Where(pt => pt.UserId == user.Id)
                                .Select(li => new SelectListItem
                                {
-                                    Text = li.Description,
-                                    Value = li.PaymentTypeId.ToString()
+                                   Text = li.Description,
+                                   Value = li.PaymentTypeId.ToString()
                                }).ToList();
             paymentTypes.Insert(0, new SelectListItem
             {
@@ -113,7 +113,7 @@ namespace Bangazon.Controllers
             //Take each product, createa a new OrderLineItem object and place in placeholder array shoppingCartLineItems
             productsInCart.ForEach(p =>
             {
-                Product product =  _context.Product.SingleOrDefault(cp => cp.ProductId == p.key);
+                Product product = _context.Product.SingleOrDefault(cp => cp.ProductId == p.key);
 
                 OrderLineItem newLineItem = new OrderLineItem
                 {
@@ -158,7 +158,14 @@ namespace Bangazon.Controllers
                 ;
 
             // gets only users who have 1 or more open ordersgi
-            var usersWithMultipleNullOrders = usersWithNullOrders.Where(u => u.Orders.Count() >= 2).ToList();
+            var usersWithMultipleNullOrders = usersWithNullOrders
+                .Where(u => u.Orders
+                    .Where(o => o.DateCompleted == null)
+                    .Count() >= 2)
+                .ToList()
+                .OrderByDescending(u => u.Orders.Where(o => o.DateCompleted == null).Count())
+                .ToList()
+                ;
 
             return View(usersWithMultipleNullOrders);
         }
@@ -193,8 +200,41 @@ namespace Bangazon.Controllers
             return View(abandonedProductTypes);
         }
 
+        //GET: Orders/IncompleteOrders
+        public async Task<IActionResult> IncompleteOrders()
+        {
+            // get a list of users with orders
+            var usersOpenOrders = _context.ApplicationUsers
+                .Include(au => au.Orders)
+                .ThenInclude(o => o.OrderProducts)
+                .ThenInclude(op => op.Product)
+                .OrderBy(au => au.LastName)
+                .ToList()
+                ;
 
+            return View(usersOpenOrders);
+        }
 
+        //GET: Orders/OrderHistory: 
+        [Authorize]
+        public async Task<IActionResult> OrderHistory()
+        {
+            // Get the current user
+            var user = await GetCurrentUserAsync();
+
+            // Get List of Completed Orders
+            var usersPastOrders = _context.Order
+                .Include(o => o.User)
+                .Where(o => o.User == user)
+                .Where(o => o.DateCompleted != null)
+                .Include(o => o.OrderProducts)
+                .ThenInclude(op => op.Product)
+                .OrderByDescending(o => o.DateCompleted)
+                .ToList()
+                ;
+
+            return View(usersPastOrders);
+        }
 
         // GET: Orders
         public async Task<IActionResult> Index()
@@ -204,29 +244,54 @@ namespace Bangazon.Controllers
         }
 
         // GET: Orders/Details/5
+        [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
+            // Get the current user
+            var user = await GetCurrentUserAsync();
+
+            // Get all products associated with completed order, group them in anonymous typed object with Key, Count, Title
+            var productsInOrder = _context.OrderProduct
+                                          .Where(op => op.OrderId == id)
+                                          .Select(op => op.Product)
+                                          .GroupBy(p => p.ProductId,
+                                            p => p.Title,
+                                            (key, Title) => new
+                                            {
+                                                key = key,
+                                                count = Title.Count(),
+                                                title = Title
+                                            })
+                                          .ToList()
+                                          ;
+
+            // create empty array to use as OrderDetailViewModel LineItem property
+            List<OrderLineItem> completedOrderLineItems = new List<OrderLineItem>();
+
+            //Take each product, createa a new OrderLineItem object and place in placeholder array shoppingCartLineItems
+            productsInOrder.ForEach(p =>
             {
-                // Get the current user
-                var user = await GetCurrentUserAsync();
+                Product product = _context.Product.SingleOrDefault(cp => cp.ProductId == p.key);
 
-                // See if the user has an open order
-                var openOrder = await _context.Order.SingleOrDefaultAsync(o => o.User == user && o.PaymentTypeId == null);
+                OrderLineItem newLineItem = new OrderLineItem
+                {
+                    Product = product,
+                    Units = p.count,
+                    Total = (p.count * product.Price)
+                };
 
-                return View(openOrder);
-            }
+                completedOrderLineItems.Add(newLineItem);
+            });
 
-            var order = await _context.Order
-                .Include(o => o.PaymentType)
-                .Include(o => o.User)
-                .FirstOrDefaultAsync(m => m.OrderId == id);
-            if (order == null)
+            //Create OrderDetailViewModel using current users open order and shoppingCartLineItems
+            OrderDetailViewModel model = new OrderDetailViewModel
             {
-                return NotFound();
-            }
+                Order = _context.Order.FirstOrDefault(o => o.OrderId == id),
+                LineItems = completedOrderLineItems,
+                PaymentTypes = null
+            };
 
-            return View(order);
+            return View(model);
         }
 
         // GET: Orders/Create
@@ -347,7 +412,7 @@ namespace Bangazon.Controllers
             }
             //ViewData["PaymentTypeId"] = new SelectList(_context.PaymentType, "PaymentTypeId", "AccountNumber", order.PaymentTypeId);
             //ViewData["UserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", order.UserId);
-            return  RedirectToAction(nameof(ShoppingCart));
+            return RedirectToAction(nameof(ShoppingCart));
         }
 
         // POST: Orders/DeleteProduct
@@ -362,11 +427,11 @@ namespace Bangazon.Controllers
             // Find the product requested
             List<OrderProduct> productToDelete = await _context.OrderProduct
                 .Where(op => op.OrderId == openOrder.OrderId && op.ProductId == id).ToListAsync();
-                
-                
-            foreach(var product in productToDelete)
+
+
+            foreach (var product in productToDelete)
             {
-            _context.Remove(product);
+                _context.Remove(product);
             }
             await _context.SaveChangesAsync();
 
@@ -399,9 +464,14 @@ namespace Bangazon.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var order = await _context.Order.FindAsync(id);
+            var orderProducts =  _context.OrderProduct.Where(op => op.OrderId == id);
+            foreach(var item in orderProducts)
+            {
+                _context.OrderProduct.Remove(item);
+            }
             _context.Order.Remove(order);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Index", "Products");
         }
 
         private bool OrderExists(int id)

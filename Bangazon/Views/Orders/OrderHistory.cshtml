@@ -1,0 +1,39 @@
+﻿@model List<Bangazon.Models.Order>
+@{
+    ViewData["Title"] = "OrderHistory";
+}
+
+<h1>@Model[0].User.FirstName's Order History</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Order #
+            </th>
+            <th>
+                Date Completed
+            </th>
+            <th>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var order in Model)
+        {
+            <tr>
+                <td>
+                    @order.OrderId
+                </td>
+                <td>
+                    @order.DateCompleted
+                </td>
+                <td>
+                    <a asp-controller="Orders" asp-action="Details" asp-route-id="@order.OrderId">Details</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+

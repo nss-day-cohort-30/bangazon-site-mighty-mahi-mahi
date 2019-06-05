@@ -1,0 +1,30 @@
+﻿@model List<Bangazon.Models.ApplicationUser>
+@{
+    ViewData["Title"] = "IncompleteOrders";
+}
+
+<h1>IncompleteOrders:</h1>
+
+@foreach (var user in Model)
+{
+    //check to see if user has open order/orders
+    @if (user.Orders.Where(o => o.DateCompleted == null).Count() >= 1)
+    {
+        <h3>@user.FirstName @user.LastName</h3>
+
+        @foreach (var order in user.Orders)
+        {
+            @if (order.DateCompleted == null)
+            {
+                <h4>Order # @order.OrderId</h4>
+                <ol>
+                    @foreach (var product in order.OrderProducts)
+                    {
+                        <li>@product.Product.Title</li>
+                    }
+                </ol>
+            }
+        }
+    }
+}
+
