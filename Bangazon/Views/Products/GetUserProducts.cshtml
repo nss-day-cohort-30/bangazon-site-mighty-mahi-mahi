@@ -28,33 +28,47 @@
             <th>
                 @Html.DisplayNameFor(model => model[0].NumberSold)
             </th>
+            <th>
+                @Html.DisplayNameFor(model => model[0].AverageRating)
+            </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Product.DateCreated)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Product.Title)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Product.Price)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Product.Quantity)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.NumberSold)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Product.ProductId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Product.ProductId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Product.ProductId">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Product.DateCreated)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Product.Title)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Product.Price)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Product.Quantity)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.NumberSold)
+                </td>
+                <td>
+                    @if (item.AverageRating == 0)
+                    {
+                        <p>Not Rated</p>
+                    }
+                    else
+                    {
+                        @Html.DisplayFor(modelIem => item.AverageRating)
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Product.ProductId">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.Product.ProductId">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Product.ProductId">Delete</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>

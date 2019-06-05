@@ -10,6 +10,8 @@ using Bangazon.Models;
 using Microsoft.AspNetCore.Identity;
 using Bangazon.Models.ProductViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Bangazon.Models.OrderViewModels;
+using Microsoft.AspNetCore.Http;
 using System.IO;
 
 namespace Bangazon.Controllers
@@ -91,7 +93,7 @@ namespace Bangazon.Controllers
         }
 
         // POST: Products/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -125,12 +127,12 @@ namespace Bangazon.Controllers
                     model.Product.ImagePath = model.ImageFile.FileName;
                 }
 
-            
+
                     _context.Add(model.Product);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
             }
-        
+
             ViewData["ProductType"] = new SelectList(_context.ProductType, "ProductTypeId", "Label", model.Product.ProductType);
             ViewData["UserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", model.Product.UserId);
             return View(model);
@@ -155,7 +157,7 @@ namespace Bangazon.Controllers
         }
 
         // POST: Products/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -264,19 +266,57 @@ namespace Bangazon.Controllers
                     NumberSold = 0
                 })
                 .FirstOrDefault()
-                ;                
+                ;
+
+                var ratingsForCurrentProduct = _context.UserProductRating
+                .Where(upr => upr.ProductId == p.ProductId)
+                .ToList()
+                ;
+
+                double averageRating = 0;
+
+                if (ratingsForCurrentProduct.Count() != 0)
+                {
+                    averageRating = ratingsForCurrentProduct.Select(upr => upr.Rating).Average();
+                }
+
 
                 //create a UserProductStatusModel for the current product and add it to the list that will be passed into the view
                 UserProductStatusModel productStatusModel = new UserProductStatusModel
                 {
                     Product = p,
-                    NumberSold = numberSold.NumberSold
+                    NumberSold = numberSold.NumberSold,
+                    AverageRating = averageRating
                 };
 
                 UsersProductStatusModels.Add(productStatusModel);
             });
 
             return View(UsersProductStatusModels);
+        }
+
+
+
+        //
+        [Authorize]
+        public async Task<IActionResult> AddRating(int id, [FromForm] int Rating, [FromForm] int OrderId)
+        {
+            // Get current User
+            var user = await GetCurrentUserAsync();
+
+            // Create new UserProductRating
+            UserProductRating upr = new UserProductRating
+            {
+                ProductId = id,
+                UserId = user.Id,
+                Rating = Rating
+            };
+
+            // Send user product rating to DB
+            _context.UserProductRating.Update(upr);
+            _context.SaveChanges();
+
+            return RedirectToAction("Details", "Orders", new { id = OrderId });
         }
     }
 }
