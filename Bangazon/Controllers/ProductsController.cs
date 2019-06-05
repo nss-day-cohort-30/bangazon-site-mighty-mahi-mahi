@@ -114,10 +114,6 @@ namespace Bangazon.Controllers
         }
 
 
-
-
-
-
         // GET: Products/Create
         public IActionResult Create()
         {
@@ -353,6 +349,27 @@ namespace Bangazon.Controllers
             _context.SaveChanges();
 
             return RedirectToAction("Details", "Orders", new { id = OrderId });
+        }
+
+        [Authorize]
+        public async Task<IActionResult> CreateLike(int id, [FromForm] bool ButtonValue)
+        {
+            // Get User
+            var user = await GetCurrentUserAsync();
+
+            //Create new UserProductLike
+            UserProductLike upl = new UserProductLike
+            {
+                ProductId = id,
+                UserId = user.Id,
+                IsLiked = ButtonValue
+            };
+
+            //Send user like to DB
+            _context.UserProductLike.Update(upl);
+            _context.SaveChanges();
+
+            return RedirectToAction("Details", "Products", new { id = id });
         }
     }
 }
