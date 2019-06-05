@@ -31,16 +31,19 @@ namespace Bangazon.Controllers
         // GET: Products
         public async Task<IActionResult> Index(string SearchString)
         {
+            ViewBag.SearchString = false;
             // if user has entered search term into search bar, list of products containing the search string will be returned
             if (SearchString != null)
             {
-                var applicationDbContext1 = _context.Product.Include(p => p.ProductType)
+                
+                var applicationDbContext = _context.Product.Include(p => p.ProductType)
                    .Include(p => p.User)
 
                    .Where(p => p.Title.Contains(SearchString) || p.City.Contains(SearchString))
 
                    .OrderByDescending(p => p.DateCreated);
-                return View(await applicationDbContext1.ToListAsync());
+                ViewBag.SearchString = true;
+                return View(await applicationDbContext.ToListAsync());
             }
             // if the search bar is blank the complete list of products will be returned to the user
             else
