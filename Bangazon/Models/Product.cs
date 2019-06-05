@@ -51,5 +51,7 @@ namespace Bangazon.Models
 
     public virtual ICollection<OrderProduct> OrderProducts { get; set; }
 
-  }
+    public virtual ICollection<UserProductRating> Ratings { get; set; }
+
+    }
 }
