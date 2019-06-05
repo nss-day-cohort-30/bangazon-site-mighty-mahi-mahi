@@ -10,6 +10,7 @@ using Bangazon.Models;
 using Microsoft.AspNetCore.Identity;
 using Bangazon.Models.ProductViewModels;
 using Microsoft.AspNetCore.Authorization;
+using System.IO;
 
 namespace Bangazon.Controllers
 {
@@ -78,10 +79,11 @@ namespace Bangazon.Controllers
         // GET: Products/Create
         public IActionResult Create()
         {
-
+            UploadPictureViewModel model = new UploadPictureViewModel();
+            model.Product = new Product();
             ViewData["ProductTypeId"] = new SelectList(_context.ProductType, "ProductTypeId", "Label");
             ViewData["UserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id");
-            return View();
+            return View(model);
         }
 
         // POST: Products/Create
@@ -89,9 +91,8 @@ namespace Bangazon.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ProductId,DateCreated,Description,UserId,Title,Price,Quantity,City,ImagePath,ProductTypeId")] Product product)
+        public async Task<IActionResult> Create(UploadPictureViewModel model)
         {
-            
             // Remove the user from the model validation because it is
             // not information posted in the form
             ModelState.Remove("UserId");
@@ -101,17 +102,33 @@ namespace Bangazon.Controllers
             
             if (ModelState.IsValid)
             {
-                product.DateCreated = DateTime.Now;
-                product.User = user;
-                product.UserId = user.Id;
-                _context.Add(product);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                model.Product.DateCreated = DateTime.Now;
+                model.Product.User = user;
+                model.Product.UserId = user.Id;
+
+                if (model.ImageFile != null )
+                {
+                    var fileName = Path.GetFileName(model.ImageFile.FileName);
+                    Path.GetTempFileName();
+                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot\\images", fileName);
+                    // var filePath = Path.GetTempFileName();
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await model.ImageFile.CopyToAsync(stream);
+                        // validate file, then move to CDN or public folder
+                    }
+                    model.Product.ImagePath = model.ImageFile.FileName;
+                }
+
+            
+                    _context.Add(model.Product);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
             }
         
-            ViewData["ProductType"] = new SelectList(_context.ProductType, "ProductTypeId", "Label", product.ProductType);
-           // ViewData["UserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", product.UserId);
-            return View(nameof(Index));
+            ViewData["ProductType"] = new SelectList(_context.ProductType, "ProductTypeId", "Label", model.Product.ProductType);
+            ViewData["UserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", model.Product.UserId);
+            return View(model);
         }
 
         // GET: Products/Edit/5
