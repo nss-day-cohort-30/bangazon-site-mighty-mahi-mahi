@@ -10,6 +10,8 @@ using Bangazon.Models;
 using Microsoft.AspNetCore.Identity;
 using Bangazon.Models.ProductViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Bangazon.Models.OrderViewModels;
+using Microsoft.AspNetCore.Http;
 
 namespace Bangazon.Controllers
 {
@@ -243,7 +245,7 @@ namespace Bangazon.Controllers
                     NumberSold = 0
                 })
                 .FirstOrDefault()
-                ;                
+                ;
 
                 //create a UserProductStatusModel for the current product and add it to the list that will be passed into the view
                 UserProductStatusModel productStatusModel = new UserProductStatusModel
@@ -256,6 +258,30 @@ namespace Bangazon.Controllers
             });
 
             return View(UsersProductStatusModels);
+        }
+
+
+
+        // 
+        [Authorize]
+        public async Task<IActionResult> AddRating(int id, [FromForm] int Rating, [FromForm] int OrderId)
+        {
+            // Get current User
+            var user = await GetCurrentUserAsync();
+
+            // Create new UserProductRating
+            UserProductRating upr = new UserProductRating
+            {
+                ProductId = id,
+                UserId = user.Id,
+                Rating = Rating
+            };
+
+            // Send user product rating to DB
+            _context.UserProductRating.Update(upr);
+            _context.SaveChanges();
+
+            return RedirectToAction("Details", "Orders", new { id = OrderId });
         }
     }
 }

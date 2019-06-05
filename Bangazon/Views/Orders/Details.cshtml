@@ -36,7 +36,9 @@
             <th>
                 Total Price
             </th>
-            <th></th>
+            <th>
+                Product Rating
+            </th>
         </tr>
     </thead>
     <tbody>
@@ -51,6 +53,31 @@
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.Total)
+                </td>
+                <td>
+                    @if (item.UserProductRating == null)
+                    {
+                    <form asp-controller="Products" asp-action="AddRating" asp-route-id="@item.Product.ProductId">
+                        <select asp-for="Rating">
+                            <option value="0"> Select Rating...</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+
+                        <input type="hidden" asp-for="OrderId" value="@Model.Order.OrderId" />
+
+                        <div class="form-group">
+                            <input type="submit" value="Submit Rating" class="btn btn-dark" />
+                        </div>
+                    </form>
+                    }
+                    else
+                    {
+                        @Html.DisplayFor(modelItem => item.UserProductRating.Rating)
+                    }
                 </td>
             </tr>
         }
