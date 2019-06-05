@@ -59,6 +59,12 @@
         <input type="submit" value="Complete Purchase" class="btn btn-primary" />
     </div>
 </form>
+<div>
+    <form asp-action="Delete" asp-route-id="@Model.Order.OrderId">
+        <input type="hidden" asp-for="@Model.Order" />
+        <input type="submit" value="Cancel Order" class="btn btn-danger" />
+    </form>
+</div>
 
 <td>
     <a asp-controller="Products" asp-action="Index">Continue Shopping</a> 
