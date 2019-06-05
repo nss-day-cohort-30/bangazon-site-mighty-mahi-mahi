@@ -38,6 +38,7 @@ namespace Bangazon.Models
 
     public string City {get; set;}
 
+    [Display(Name ="Product Image")]
     public string ImagePath {get; set;}
 
 
