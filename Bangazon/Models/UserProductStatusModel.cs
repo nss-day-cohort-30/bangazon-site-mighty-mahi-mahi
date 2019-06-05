@@ -12,5 +12,8 @@ namespace Bangazon.Models
 
         [Display(Name = "Number Sold")]
         public int NumberSold { get; set; }
+
+        [Display(Name = "Average Rating")]
+        public double AverageRating { get; set; }
     }
 }

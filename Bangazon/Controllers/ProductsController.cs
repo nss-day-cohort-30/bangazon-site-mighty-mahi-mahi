@@ -247,11 +247,25 @@ namespace Bangazon.Controllers
                 .FirstOrDefault()
                 ;
 
+                var ratingsForCurrentProduct = _context.UserProductRating
+                .Where(upr => upr.ProductId == p.ProductId)
+                .ToList()
+                ;
+
+                double averageRating = 0;
+
+                if (ratingsForCurrentProduct.Count() != 0)
+                {
+                    averageRating = ratingsForCurrentProduct.Select(upr => upr.Rating).Average();
+                }
+
+
                 //create a UserProductStatusModel for the current product and add it to the list that will be passed into the view
                 UserProductStatusModel productStatusModel = new UserProductStatusModel
                 {
                     Product = p,
-                    NumberSold = numberSold.NumberSold
+                    NumberSold = numberSold.NumberSold,
+                    AverageRating = averageRating
                 };
 
                 UsersProductStatusModels.Add(productStatusModel);
