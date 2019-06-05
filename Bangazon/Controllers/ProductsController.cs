@@ -42,8 +42,8 @@ namespace Bangazon.Controllers
                    .Where(p => p.Title.Contains(SearchString) || p.City.Contains(SearchString))
 
                    .OrderByDescending(p => p.DateCreated);
-                ViewBag.SearchString = true;
-                return View(await applicationDbContext.ToListAsync());
+                    ViewBag.SearchString = true;
+                    return View(await applicationDbContext.ToListAsync());
             }
             // if the search bar is blank the complete list of products will be returned to the user
             else
