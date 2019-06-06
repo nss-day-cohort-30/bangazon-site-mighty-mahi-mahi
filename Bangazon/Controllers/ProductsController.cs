@@ -37,15 +37,15 @@ namespace Bangazon.Controllers
             // if user has entered search term into search bar, list of products containing the search string will be returned
             if (SearchString != null)
             {
-                
+
                 var applicationDbContext = _context.Product.Include(p => p.ProductType)
                    .Include(p => p.User)
 
                    .Where(p => p.Title.Contains(SearchString) || p.City.Contains(SearchString))
 
                    .OrderByDescending(p => p.DateCreated);
-                    ViewBag.SearchString = true;
-                    return View(await applicationDbContext.ToListAsync());
+                ViewBag.SearchString = true;
+                return View(await applicationDbContext.ToListAsync());
             }
             // if the search bar is blank the complete list of products will be returned to the user
             else
@@ -62,6 +62,7 @@ namespace Bangazon.Controllers
 
 
         // GET: Products/Details/5
+        [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -69,18 +70,49 @@ namespace Bangazon.Controllers
                 return NotFound();
             }
 
+            var user = await GetCurrentUserAsync();
+
             // orders the products added by the user by date created and then only selects the 20 latest with the .Take() method
             var product = await _context.Product
                 .Include(p => p.ProductType)
                 .Include(p => p.User)
+                .Include(p => p.Likes)
                 .FirstOrDefaultAsync(m => m.ProductId == id);
+
+            var isOpined = _context.UserProductLike
+                .Where(upl => upl.UserId == user.Id)
+                .Where(upl=> upl.ProductId == id)
+                .ToList()
+                .Count()
+                ;
+
+            var placeholder = false;
+            var isLiked = false;
+
+            if (isOpined == 1)
+            {
+                placeholder = true;
+                isLiked = _context.UserProductLike
+                    .Where(upl => upl.UserId == user.Id)
+                    .Where(upl => upl.ProductId == id)
+                    .First()
+                    .IsLiked;
+            }
+
+            ProductDetailsModel model = new ProductDetailsModel
+            {
+                Product = product,
+                UserHasOpinion = placeholder,
+                UserLikes = isLiked
+            };
             if (product == null)
             {
                 return NotFound();
             }
 
-            return View(product);
+            return View(model);
         }
+
 
         // GET: Products/Create
         public IActionResult Create()
@@ -113,7 +145,7 @@ namespace Bangazon.Controllers
                 model.Product.User = user;
                 model.Product.UserId = user.Id;
 
-                if (model.ImageFile != null )
+                if (model.ImageFile != null)
                 {
                     var fileName = Path.GetFileName(model.ImageFile.FileName);
                     Path.GetTempFileName();
@@ -128,9 +160,9 @@ namespace Bangazon.Controllers
                 }
 
 
-                    _context.Add(model.Product);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
+                _context.Add(model.Product);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
             }
 
             ViewData["ProductType"] = new SelectList(_context.ProductType, "ProductTypeId", "Label", model.Product.ProductType);
@@ -317,6 +349,27 @@ namespace Bangazon.Controllers
             _context.SaveChanges();
 
             return RedirectToAction("Details", "Orders", new { id = OrderId });
+        }
+
+        [Authorize]
+        public async Task<IActionResult> CreateLike(int id, [FromForm] bool ButtonValue)
+        {
+            // Get User
+            var user = await GetCurrentUserAsync();
+
+            //Create new UserProductLike
+            UserProductLike upl = new UserProductLike
+            {
+                ProductId = id,
+                UserId = user.Id,
+                IsLiked = ButtonValue
+            };
+
+            //Send user like to DB
+            _context.UserProductLike.Update(upl);
+            _context.SaveChanges();
+
+            return RedirectToAction("Details", "Products", new { id = id });
         }
     }
 }
