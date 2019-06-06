@@ -237,13 +237,17 @@ namespace Bangazon.Controllers
             var product = await _context.Product
                 .Include(p => p.ProductType)
                 .Include(p => p.User)
-                .FirstOrDefaultAsync(m => m.ProductId == id);
+                .FirstOrDefaultAsync(m => m.ProductId == id)
+                ;
             if (product == null)
             {
                 return NotFound();
             }
 
-            return RedirectToAction(nameof(Delete));
+            _context.Remove(product);
+            _context.SaveChanges();
+
+            return RedirectToAction(nameof(GetUserProducts));
         }
 
         // POST: Products/Delete/5
